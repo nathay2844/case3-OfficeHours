@@ -34,7 +34,7 @@ def login_required(fn):
 def load_user():
     init_db()
     seed()
-    token = request.args.get("sid") or request.cookies.get("hold_session")
+    token = request.cookies.get("hold_session")
     g.user = None
     g.session_token = None
     if not token:

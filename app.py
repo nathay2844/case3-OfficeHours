@@ -169,6 +169,44 @@ def logout():
     resp.delete_cookie("hold_session")
     return resp
 
+@app.post("/handoff/new")
+@login_required
+def handoff_new():
+    code = secrets.token_urlsafe(16)
+    conn = get_db()
+    conn.execute(
+        "INSERT INTO handoff_codes (code, user_id) VALUES (?, ?)",
+        (code, current_user()["id"]),
+    )
+    conn.commit()
+    conn.close()
+    flash("One-time link (works once, expires in 5 minutes): "
+          + url_for("handoff_redeem", code=code, _external=True))
+    return redirect(url_for("mine"))
+
+
+@app.get("/handoff/<code>")
+def handoff_redeem(code):
+    conn = get_db()
+    row = conn.execute(
+        """SELECT user_id FROM handoff_codes
+           WHERE code = ? AND used = 0
+             AND created_at > datetime('now', '-5 minutes')""",
+        (code,),
+    ).fetchone()
+    if row:
+        cur = conn.execute(
+            "UPDATE handoff_codes SET used = 1 WHERE code = ? AND used = 0", (code,)
+        )
+        conn.commit()
+        if cur.rowcount != 1:
+            row = None
+    conn.close()
+    if not row:
+        flash("That link is invalid, expired, or already used.")
+        return redirect(url_for("login"))
+    g.session_token = create_session(row["user_id"])
+    return redirect(url_for("mine"))
 
 @app.get("/slots/new")
 @login_required

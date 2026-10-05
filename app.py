@@ -260,7 +260,7 @@ def mine():
         (current_user()["id"],),
     ).fetchall()
     conn.close()
-    return render_template("mine.html", bookings=bookings, sid=g.session_token)
+    return render_template("mine.html", bookings=bookings)
 
 
 @app.get("/bookings/<int:booking_id>")

@@ -18,6 +18,9 @@
       {% endfor %}
     </ul>
   {% endif %}
- 
+  <form method="post" action="{{ url_for('handoff_new') }}" class="help">
+    Device handoff:
+    <button type="submit">Create a one-time link for another device</button>
+  </form>
 </section>
 {% endblock %}
